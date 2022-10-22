@@ -1,0 +1,8 @@
+[database]
+51.250.92.94
+
+[database:vars]
+version=14
+data_directory="/mnt/pgdata"
+
+[app]

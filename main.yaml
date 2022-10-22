@@ -1,0 +1,123 @@
+---
+- hosts: all
+  gather_facts: no
+  become: true
+
+  vars:
+    username: user1
+
+  tasks:
+  - name: Add a new user
+    ansible.builtin.user:
+      name: "{{ username }}"
+      shell: /bin/bash
+      group: sudo
+      generate_ssh_key: yes
+      force: yes
+      state: present
+    register: new_user
+  
+  - name: Add a user to the sudoers
+    ansible.builtin.copy:
+      dest: "/etc/sudoers.d/{{ username }}"
+      content: "{{ username }}  ALL=(ALL)  NOPASSWD: ALL"
+
+  - name: Set authorized key
+    authorized_key:
+      user: "{{ username }}"
+      state: present
+      key: "{{ new_user.ssh_public_key }}"
+
+  - name: Disable password authentication
+    lineinfile:
+      dest=/etc/ssh/sshd_config
+      regexp='^PasswordAuthentication'
+      line="PasswordAuthentication no"
+      state=present
+      backup=yes
+    notify:
+      - restart ssh
+
+  - name: Disable Root Login
+    lineinfile:
+      dest=/etc/ssh/sshd_config
+      regexp='^PermitRootLogin'
+      line="PermitRootLogin no"
+      state=present
+      backup=yes
+    notify:
+      - restart ssh
+
+  handlers:
+  - name: restart ssh
+    service:
+      name=sshd
+      state=restarted
+
+
+- hosts: database
+  become: true
+
+  tasks:
+  - name: Install ansible
+    ansible.builtin.apt:
+      name: ansible
+      state: present
+      update_cache: false
+    tags: install
+
+  - name: Install postgresql
+    ansible.builtin.apt:
+      name: "{{ item }}"
+      state: latest
+      update_cache: true
+    loop:
+      - "postgresql-{{ version }}"
+      - postgresql-contrib
+
+  handlers:
+  - name: stop postgres
+    ansible.builtin.service:
+      name: postgres
+      state: stop
+
+
+# - hosts: app
+#   gather_facts: no
+#   become: true
+#   tasks:
+#   - name: Install required system packages
+#     ansible.builtin.apt:
+#       name: "{{ item }}"
+#       state: latest
+#       update_cache: true
+#     loop:
+#       - apt-transport-https
+#       - ca-certificates
+#       - curl
+#       - software-properties-common
+#       - gnupg-agent
+
+#   - name: Add Docker GPG apt Key
+#     ansible.builtin.apt_key:
+#       url: https://download.docker.com/linux/ubuntu/gpg
+#       state: present
+
+#   - name: Add Docker Repository
+#     ansible.builtin.apt_repository:
+#       repo: deb https://download.docker.com/linux/ubuntu focal stable
+#       state: present
+
+#   - name: Update apt and install docker-ce
+#     ansible.builtin.apt:
+#       name: docker-ce
+#       state: latest
+#       update_cache: true
+
+#   - name: Start docker
+#     ansible.builtin.service:
+#       name: docker
+#       state: restarted
+
+
+

@@ -1,0 +1,5 @@
+postgresql.conf
+terraform/.terraform/*
+terraform/.terraform*
+terraform/secrets.sh
+terraform/terraform.*
