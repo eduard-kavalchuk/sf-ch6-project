@@ -35,14 +35,15 @@ scp ed@51.250.92.94:/etc/postgresql/14/main/postgresql.conf .
 sudo chmod a+w /var/run/postgresql
 
 
-Find current data directory:
+Find a current data directory:
 1. sudo -u postgres psql
 2. SHOW data_directory;
 3. \q
 
-sudo rsync -av /var/lib/postgresql   /mnt/data_vol/
+sudo service postgresql stop
+sudo rsync -av /var/lib/postgresql   /mnt/pgdata/
 sudo mv /var/lib/postgresql/14/main /var/lib/postgresql_backup
 sudo vi /etc/postgresql/14/main/postgresql.conf
 Change to:
-data_directory = '/mnt/data_vol/postgresql/14/main'
+data_directory = '/mnt/pgdata/postgresql/14/main'
 sudo service postgresql start

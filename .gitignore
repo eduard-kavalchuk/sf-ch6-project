@@ -3,3 +3,4 @@ terraform/.terraform/*
 terraform/.terraform*
 terraform/secrets.sh
 terraform/terraform.*
+id_rsa.pub
