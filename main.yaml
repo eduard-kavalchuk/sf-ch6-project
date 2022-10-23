@@ -42,8 +42,8 @@
   handlers:
   - name: restart ssh
     service:
-      name=sshd
-      state=restarted
+      name: sshd
+      state: restarted
 
 
 - hosts: database
@@ -63,54 +63,54 @@
       dest: "id_rsa.pub"
       flat: yes
 
-  # - name: Install ansible
-  #   ansible.builtin.apt:
-  #     name: ansible
-  #     state: present
-  #     update_cache: false
-  #   tags: install
+  - name: Install ansible
+    ansible.builtin.apt:
+      name: ansible
+      state: present
+      update_cache: false
+    tags: install
 
-  # - name: Install postgresql
-  #   ansible.builtin.apt:
-  #     name: "{{ item }}"
-  #     state: latest
-  #     update_cache: true
-  #   loop:
-  #     - "postgresql-{{ version }}"
-  #     - postgresql-contrib
+  - name: Install postgresql
+    ansible.builtin.apt:
+      name: "{{ item }}"
+      state: latest
+      update_cache: true
+    loop:
+      - "postgresql-{{ version }}"
+      - postgresql-contrib
 
-  # # Start moving posgres' data directory to a different location
-  # - name: stop postgresql
-  #   ansible.builtin.service:
-  #     name: postgresql
-  #     state: stopped
+  # Start moving posgres' data directory to a different location
+  - name: stop postgresql
+    ansible.builtin.service:
+      name: postgresql
+      state: stopped
 
-  # - name: rsync current and future postgres data directories
-  #   # sudo rsync -av /var/lib/postgresql   /mnt/pgdata/
-  #   synchronize:
-  #     src: "/var/lib/postgresql"
-  #     dest: "{{ data_directory }}"
-  #     archive: yes
-  #   delegate_to: vm1
+  - name: rsync current and future postgres data directories
+    # sudo rsync -av /var/lib/postgresql   /mnt/pgdata/
+    synchronize:
+      src: "/var/lib/postgresql"
+      dest: "{{ data_directory }}"
+      archive: yes
+    delegate_to: vm1
 
-  # - name: backup 
-  #   #sudo mv /var/lib/postgresql/14/main /var/lib/postgresql_backup
-  #   ansible.builtin.copy:
-  #     src: "/var/lib/postgresql/{{ version }}/main"
-  #     dest: /var/lib/postgresql_backup
-  #     remote_src: yes
+  - name: backup 
+    #sudo mv /var/lib/postgresql/14/main /var/lib/postgresql_backup
+    ansible.builtin.copy:
+      src: "/var/lib/postgresql/{{ version }}/main"
+      dest: /var/lib/postgresql_backup
+      remote_src: yes
 
-  # - name: fix postgresql.conf
-  #   lineinfile:
-  #     dest: "/etc/postgresql/{{ version }}/main/postgresql.conf"
-  #     state: present
-  #     regexp: "^data_directory ="
-  #     line: "data_directory = '{{ data_directory }}/postgresql/{{ version }}/main'"
+  - name: fix postgresql.conf
+    lineinfile:
+      dest: "/etc/postgresql/{{ version }}/main/postgresql.conf"
+      state: present
+      regexp: "^data_directory ="
+      line: "data_directory = '{{ data_directory }}/postgresql/{{ version }}/main'"
 
-  # - name: start postgresql
-  #   ansible.builtin.service:
-  #     name: postgresql
-  #     state: started
+  - name: start postgresql
+    ansible.builtin.service:
+      name: postgresql
+      state: started
 
 - hosts: app
   gather_facts: no
@@ -123,81 +123,91 @@
       state: present
       key: "{{ lookup('file','id_rsa.pub')}}"
 
+  - name: Transfer ssh key
+    ansible.builtin.copy:
+      src: "id_rsa.pub"
+      dest: "/home/{{ username }}/.ssh/id_rsa.pub"
+      mode: 0600
+      owner: "{{ username }}"
+      decrypt: yes
 
-# # Install docker on Ubuntu server
-# - hosts: vm2
-#   gather_facts: no
-#   become: true
-
-#   tasks:
-#   - name: Install required system packages
-#     ansible.builtin.apt:
-#       name: "{{ item }}"
-#       state: latest
-#       update_cache: true
-#     loop:
-#       - apt-transport-https
-#       - ca-certificates
-#       - curl
-#       - software-properties-common
-#       - gnupg-agent
-
-#   - name: Add Docker GPG apt Key
-#     ansible.builtin.apt_key:
-#       url: https://download.docker.com/linux/ubuntu/gpg
-#       state: present
-
-#   - name: Add Docker Repository
-#     ansible.builtin.apt_repository:
-#       repo: deb https://download.docker.com/linux/ubuntu focal stable
-#       state: present
-
-#   - name: Update apt and install docker-ce
-#     ansible.builtin.apt:
-#       name: docker-ce
-#       state: latest
-#       update_cache: true
-
-#   - name: Start docker
-#     ansible.builtin.service:
-#       name: docker
-#       enabled: true
-#       state: started
-
-# # Install docker on CentOS server
-# - hosts: vm3
-#   gather_facts: no
-#   become: true
-
-#   tasks:
-#   - name: Add signing key
-#     ansible.builtin.rpm_key:
-#       key: "https://download.docker.com/linux/centos/gpg"
-#       state: present
-
-#   - name: Add Docker repository into repo.d list
-#     ansible.builtin.yum_repository:
-#       name: docker
-#       description: docker repository
-#       baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable"
-#       enabled: true
-#       gpgcheck: true
-#       gpgkey: "https://download.docker.com/linux/centos/gpg"
-
-#   - name: Install Docker
-#     ansible.builtin.yum:
-#       name:
-#         - docker-ce
-#         - docker-ce-cli
-#         - containerd.io
-#       state: latest
-#       update_cache: true
-
-#   - name: Start Docker
-#     ansible.builtin.service:
-#       name: docker
-#       enabled: true
-#       state: started
+  - name: restart ssh
+    service:
+      name: sshd
+      state: restarted
 
 
+# Install docker on Ubuntu server
+- hosts: vm2
+  gather_facts: no
+  become: true
 
+  tasks:
+  - name: Install required system packages
+    ansible.builtin.apt:
+      name: "{{ item }}"
+      state: latest
+      update_cache: true
+    loop:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - gnupg-agent
+
+  - name: Add Docker GPG apt Key
+    ansible.builtin.apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: Add Docker Repository
+    ansible.builtin.apt_repository:
+      repo: deb https://download.docker.com/linux/ubuntu focal stable
+      state: present
+
+  - name: Update apt and install docker-ce
+    ansible.builtin.apt:
+      name: docker-ce
+      state: latest
+      update_cache: true
+
+  - name: Start docker
+    ansible.builtin.service:
+      name: docker
+      enabled: true
+      state: started
+
+# Install docker on CentOS server
+- hosts: vm3
+  gather_facts: no
+  become: true
+
+  tasks:
+  - name: Add signing key
+    ansible.builtin.rpm_key:
+      key: "https://download.docker.com/linux/centos/gpg"
+      state: present
+
+  - name: Add Docker repository into repo.d list
+    ansible.builtin.yum_repository:
+      name: docker
+      description: docker repository
+      baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable"
+      enabled: true
+      gpgcheck: true
+      gpgkey: "https://download.docker.com/linux/centos/gpg"
+
+  - name: Install Docker
+    ansible.builtin.yum:
+      name:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+      state: latest
+      update_cache: true
+
+  - name: Start Docker
+    ansible.builtin.service:
+      name: docker
+      enabled: true
+      state: started
