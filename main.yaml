@@ -79,27 +79,28 @@
       - "postgresql-{{ version }}"
       - postgresql-contrib
 
-  # Start moving posgres' data directory to a different location
+  # Step 1. Start moving posgres' data directory to a different location
   - name: stop postgresql
     ansible.builtin.service:
       name: postgresql
       state: stopped
 
+  # Step 2. sudo rsync -av /var/lib/postgresql   /mnt/pgdata/
   - name: rsync current and future postgres data directories
-    # sudo rsync -av /var/lib/postgresql   /mnt/pgdata/
     synchronize:
       src: "/var/lib/postgresql"
       dest: "{{ data_directory }}"
       archive: yes
     delegate_to: vm1
 
+  # Step 3. sudo mv /var/lib/postgresql/14/main /var/lib/postgresql_backup
   - name: backup 
-    #sudo mv /var/lib/postgresql/14/main /var/lib/postgresql_backup
     ansible.builtin.copy:
       src: "/var/lib/postgresql/{{ version }}/main"
       dest: /var/lib/postgresql_backup
       remote_src: yes
 
+  # Step 4.
   - name: fix postgresql.conf
     lineinfile:
       dest: "/etc/postgresql/{{ version }}/main/postgresql.conf"
@@ -107,11 +108,14 @@
       regexp: "^data_directory ="
       line: "data_directory = '{{ data_directory }}/postgresql/{{ version }}/main'"
 
+  # Step 5.
   - name: start postgresql
     ansible.builtin.service:
       name: postgresql
       state: started
 
+
+# Enable authorization of user1 from VM1 to VM2 and VM3 by ssh
 - hosts: app
   gather_facts: no
   become: true
