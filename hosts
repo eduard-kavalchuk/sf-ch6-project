@@ -2,10 +2,12 @@
 username="user1"
 
 [database]
-vm1 ansible_host=178.154.202.54
+vm1 ansible_host=62.84.116.42
 
 [database:vars]
 version=14
 data_directory="/mnt/pgdata"
 
 [app]
+vm2 ansible_host=62.84.126.159
+vm3 ansible_host=51.250.78.23

@@ -35,18 +35,18 @@ module "vm1" {
   service_account_id = var.service_account_id
 }
 
-# module "vm2" {
-#   zone               = yandex_vpc_subnet.default_subnet.zone
-#   source             = "./instances"
-#   vm_image           = "fd8kb72eo1r5fs97a1ki"
-#   subnet_id          = yandex_vpc_subnet.default_subnet.id
-#   service_account_id = var.service_account_id
-# }
+module "vm2" {
+  zone               = yandex_vpc_subnet.default_subnet.zone
+  source             = "./instances"
+  vm_image           = "fd8kb72eo1r5fs97a1ki"
+  subnet_id          = yandex_vpc_subnet.default_subnet.id
+  service_account_id = var.service_account_id
+}
 
-# module "vm3" {
-#   zone               = yandex_vpc_subnet.default_subnet.zone
-#   source             = "./instances"
-#   vm_image           = "fd88d14a6790do254kj7"
-#   subnet_id          = yandex_vpc_subnet.default_subnet.id
-#   service_account_id = var.service_account_id
-# }
+module "vm3" {
+  zone               = yandex_vpc_subnet.default_subnet.zone
+  source             = "./instances"
+  vm_image           = "fd88d14a6790do254kj7"
+  subnet_id          = yandex_vpc_subnet.default_subnet.id
+  service_account_id = var.service_account_id
+}
